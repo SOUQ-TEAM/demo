@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { generatePrompts } from '@/utils/openai';
 import { queryChromaDB } from '@/utils/chroma';
 
 export default function Home() {
@@ -11,20 +10,24 @@ export default function Home() {
   const handleSendMessage = async () => {
     if (input.trim()) {
       setMessages([...messages, input]);
-
+  
       try {
-        // Call OpenAI API to generate a concise answer
-        const chatbotResponse = await generatePrompts('text-davinci-003', input);
-
+        const response = await fetch('/api/openai', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ model: 'gpt-3.5-turbo', prompt: input }),
+        });
+  
+        const data = await response.json();
+        const chatbotResponse = data.text;
+  
         // Query ChromaDB based on user input
         const chromaDBResponse = await queryChromaDB(input, 1);
-
-        // Ensure that chromaDBResponse is an array
+  
         if (Array.isArray(chromaDBResponse) && chromaDBResponse.length > 0) {
-          // Use type assertion to ensure that chromaDBResponse[0] exists
           const firstChromaDBDocument = (chromaDBResponse[0] as { document: string })?.document;
-
-          // Combine the two responses
           const combinedResponse = `${firstChromaDBDocument} ${chatbotResponse}`;
           setMessages([...messages, combinedResponse]);
         } else {
@@ -33,10 +36,11 @@ export default function Home() {
       } catch (error) {
         console.error('Error handling in handleSendMessage:', error);
       }
-
+  
       setInput('');
     }
   };
+  
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">

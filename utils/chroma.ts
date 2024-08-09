@@ -1,7 +1,8 @@
 import { ChromaClient } from 'chromadb';
 
+const chroma_url = process.env.CHROMA_URL
 // Initialize ChromaDB client
-const client = new ChromaClient({ path: 'http://localhost:8080' });
+const client = new ChromaClient({ path: chroma_url });
 
 // Save files to ChromaDB
 export async function saveFilesToChromaDB() {
